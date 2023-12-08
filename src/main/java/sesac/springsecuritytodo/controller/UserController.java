@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import sesac.springsecuritytodo.dto.ResponseDTO;
 import sesac.springsecuritytodo.dto.UserDTO;
 import sesac.springsecuritytodo.entity.UserEntity;
+import sesac.springsecuritytodo.security.TokenProvider;
 import sesac.springsecuritytodo.service.UserService;
 
 @Slf4j
@@ -19,6 +20,10 @@ import sesac.springsecuritytodo.service.UserService;
 public class UserController {
     @Autowired
     private UserService service;
+
+    // [after] jwt 적용
+    @Autowired
+    private TokenProvider tokenProvider;
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody UserDTO dto) {
@@ -53,9 +58,18 @@ public class UserController {
 
         if (user != null) {
             // 이메일, 비번으로 찾은 유저 있음 = 로그인 성공
+            // [before] jwt 적용
+//      final UserDTO resUserDTO = UserDTO.builder()
+//          .email(user.getEmail())
+//          .id(user.getId())
+//          .build();
+
+            // [after] jwt 적용
+            final String token = tokenProvider.create(user);
             final UserDTO resUserDTO = UserDTO.builder()
                     .email(user.getEmail())
                     .id(user.getId())
+                    .token(token) // jwt 토큰 설정
                     .build();
 
             return ResponseEntity.ok().body(resUserDTO);
