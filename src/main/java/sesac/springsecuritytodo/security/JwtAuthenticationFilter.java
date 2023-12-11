@@ -2,6 +2,7 @@ package sesac.springsecuritytodo.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -17,33 +18,31 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.rmi.server.ServerCloneException;
 
 @Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    // oncePerPequestFilter
-    // - 하나 요청당 한 번 실행됨
+    // OncePerRequestFilter
+    // - 한 요청당 한 번 실행됨
 
     @Autowired
     private TokenProvider tokenProvider;
 
     // doFilterInternal 메소드
-    // -OncePerRequestFilter 에 정의된 추상 메소드 중 하나
-    // - 재정의한 메소드에서 하는 작업: JWT 토큰 검증, 사용자 정보를 Spring Security의 SecurityContextHolder 에 등록
+    // - OncePerRequestFilter 에 정의된 추상 메소드 중 하나
+    // - 재정의한 메소드에서 하는 작업: JWT 토큰 검증, 사용자 정보를 Spring Security 의 SecurityContextHolder 에 등록
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-        throws ServletException, IOException {
+            throws ServletException, IOException {
         try {
             log.info("Filter is running...");
             String token = parseBearerToken(request);
 
-            // tocken 검사
+            // token 검사
             // - 토큰 인증 부분 구현
             // - 유효시간 검사 생략
-            if (token != null & !token.equalsIgnoreCase("null")) {
-                // 토큰이 null, "null"이 아니라면 토큰 검사 진행
-                // null, NULL, Null 등 예외처리 한꺼번에 : equalsIgnoreCase
+            if (token != null && !token.equalsIgnoreCase("null")) {
+                // 토큰이 null, "null" 이 아니라면 토큰 검사 진행
 
                 // userId 가져오기 (만약 토큰이 위조되었다면 예외 처리)
                 String userId = tokenProvider.validateAndGetUserId(token);
@@ -65,14 +64,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 다음 필터로 계속 진행
         filterChain.doFilter(request, response);
     }
-    private  String parseBearerToken(HttpServletRequest request) {
+
+    private String parseBearerToken(HttpServletRequest request) {
         // 요청의 헤더에서 Bearer 토큰을 가져옴
         String bearerToken = request.getHeader("Authorization");
 
         // 토큰 파싱
-        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7); // Bearer 6글자 + 공백 1글자
         }
+
         return null;
     }
 }
@@ -80,15 +81,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 // doFilterInternal 메소드 사용법 (시그니처)
 // - 요청을 가로채서 필요한 작업을 수행한 다음에 다음 필터로 요청 전달
 /*
-* protexted void doFilterInternal (
-*   HttpServletRequest req,
-*   HttpServletResponse res,
-*   FilterChain filterChain
-* ) throws ServletException, IOException {
-*  // 해당 필터에서 필요한 작업
-*  // ...
-*
-* // 다음 필터 요청 전달
-*   filterChain.doFilter(req, res);
-* }
-* */
+protected void doFilterInternal(
+  HttpServletRequest req,
+  HttpServletResponse res,
+  FilterChain filterChain
+) throws ServletException, IOException {
+  // 해당 필터에서 필요한 작업
+  // ...
+
+  // 다음 필터로 요청 전달
+  filterChain.doFilter(req, res);
+}
+*/
