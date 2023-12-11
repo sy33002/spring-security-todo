@@ -2,6 +2,7 @@ package sesac.springsecuritytodo.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import sesac.springsecuritytodo.dto.ResponseDTO;
 import sesac.springsecuritytodo.dto.TodoDTO;
@@ -22,9 +23,12 @@ public class TodoController {
     private TodoService service;
 
     @PostMapping
-    public ResponseEntity<?> createTodo(@RequestBody TodoDTO dto) {
+    public ResponseEntity<?> createTodo(@AuthenticationPrincipal String userId, @RequestBody TodoDTO dto) {
         try {
-            String tempraryUserId = "temp-user"; // 임시 유저
+            // @AuthenticationPrincipal
+            // - 해당 어노테이션이 붙어 있으므로 스프링이 로그인한 userId를 찾을 수 있다!
+
+            // String tempraryUserId = "temp-user"; // 임시 유저
 
             // (1) dto를 TodoEntity로 변환
             TodoEntity entity = TodoDTO.todoEntity(dto);
@@ -33,8 +37,8 @@ public class TodoController {
             entity.setUserId(null);
 
             // (3) 유저 설정
-            entity.setUserId(tempraryUserId);
-
+            // entity.setUserId(tempraryUserId);
+                entity.setUserId(userId); // 로그인한 유저 아이디로 설정 ("지금 만드는 투두는 이 userId가 생성한 투두이다")
             // (4) 서비스 계층을 이용해 투두 엔티티 생성
             List<TodoEntity> entities = service.create(entity);
 
@@ -71,11 +75,12 @@ public class TodoController {
     }
 
     @GetMapping
-    public ResponseEntity<?> retrieveTodoList() {
-        String tempraryUserId = "temp-user"; // 임시 유저
+    public ResponseEntity<?> retrieveTodoList(@AuthenticationPrincipal String userId) {
+        // String tempraryUserId = "temp-user"; // 임시 유저
 
         // (1) 서비스 계층의 retriev() 사용해서 투두 리스트 가져오기
-        List<TodoEntity> entities = service.retrieve(tempraryUserId);
+        // List<TodoEntity> entities = service.retrieve(tempraryUserId);
+        List<TodoEntity> entities = service.retrieve(userId);
 
         // (2) 리턴된 엔티티 리스트를 TodoDTO 배열로 변환
         List<TodoDTO> dtos = new ArrayList<>();
